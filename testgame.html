@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Alphabet Adventure</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; background-color: #fce4ec; }
+    h1 { color: #ff4081; }
+    .stage, .menu { padding: 20px; border-radius: 12px; background-color: #fff59d; margin: 20px; }
+    .word { font-size: 64px; font-weight: bold; cursor: pointer; }
+    .instruction { font-size: 24px; color: #3f51b5; }
+    .feedback { font-size: 24px; color: green; margin-top: 15px; }
+    .alphabet-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 15px;
+      justify-content: center;
+    }
+    button { padding: 12px; font-size: 18px; cursor: pointer; border-radius: 8px; background-color: #b3e5fc; }
+  </style>
+</head>
+<body>
+  <h1>Alphabet Adventure</h1>
+  <div class="menu" id="menu"></div>
+  <div class="stage" id="stage" style="display:none;"></div>
+  <div class="feedback" id="feedback"></div>
+
+  <script>
+    const wordList = {
+      A: 'Apple', B: 'Ball', C: 'Cat', D: 'Dog', E: 'Elephant', F: 'Fish',
+      G: 'Giraffe', H: 'Hat', I: 'Igloo', J: 'Juice', K: 'Kite', L: 'Lion',
+      M: 'Monkey', N: 'Nest', O: 'Orange', P: 'Parrot', Q: 'Queen', R: 'Rabbit',
+      S: 'Sun', T: 'Tiger', U: 'Umbrella', V: 'Van', W: 'Whale', X: 'Xylophone',
+      Y: 'Yak', Z: 'Zebra'
+    };
+
+    let currentLetter = '';
+    let currentProblem = 1;
+
+    function speak(text) {
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.rate = 0.8;
+      window.speechSynthesis.speak(msg);
+    }
+
+    function showMenu() {
+      document.getElementById('menu').innerHTML = `
+        <p>Select an Alphabet to Play:</p>
+        <div class="alphabet-grid">
+          ${Object.keys(wordList).map(letter => 
+            `<button onclick="startGame('${letter}')">${letter}</button>`
+          ).join('')}
+        </div>`;
+      document.getElementById('menu').style.display = 'block';
+      document.getElementById('stage').style.display = 'none';
+      document.getElementById('feedback').textContent = '';
+    }
+
+    function startGame(letter) {
+      currentLetter = letter;
+      currentProblem = 1;
+      showProblem();
+    }
+
+    function showProblem() {
+      const word = wordList[currentLetter];
+      document.getElementById('menu').style.display = 'none';
+      document.getElementById('stage').style.display = 'block';
+      
+      if (currentProblem === 1 || currentProblem === 3) {
+        document.getElementById('stage').innerHTML = `
+          <p class="instruction">Click on the letter ${currentLetter} in '${word}'</p>
+          <p class="word" onclick="checkFirstLetter(event, '${word}')">
+            ${word.split('').map(ch => 
+              `<span style="color:${ch.toUpperCase() === currentLetter ? 'red' : 'black'};">${ch}</span>`
+            ).join('')}
+          </p>`;
+        speak(`Click on the letter ${currentLetter} in ${word}`);
+      } else if (currentProblem === 2) {
+        const ask = Math.random() > 0.5 ? 'uppercase' : 'lowercase';
+        document.getElementById('stage').innerHTML = `
+          <p>Click the ${ask} letter:</p>
+          <button onclick="checkUpperLower('${ask}','uppercase')">${currentLetter.toUpperCase()}</button>
+          <button onclick="checkUpperLower('${ask}','lowercase')">${currentLetter.toLowerCase()}</button>`;
+        speak(`Find the ${ask} version of ${currentLetter}`);
+      }
+    }
+
+    function checkFirstLetter(event, word) {
+      if (event.target.innerText.toUpperCase() === currentLetter) {
+        speak(`Great job! The word is ${word}`);
+        document.getElementById('feedback').textContent = `Correct! The word is '${word}'`;
+        setTimeout(() => {
+          if (currentProblem === 3) showMenu();
+          else { currentProblem++; showProblem(); }
+        }, 2000);
+      } else {
+        speak('Try again!');
+        document.getElementById('feedback').textContent = 'Try again!';
+      }
+    }
+
+    function checkUpperLower(asked, clicked) {
+      if (asked === clicked) {
+        speak('Great job!');
+        document.getElementById('feedback').textContent = 'Great job!';
+        setTimeout(() => { currentProblem++; showProblem(); }, 2000);
+      } else {
+        speak('Try again!');
+        document.getElementById('feedback').textContent = 'Try again!';
+      }
+    }
+
+    showMenu();
+  </script>
+</body>
+</html>
